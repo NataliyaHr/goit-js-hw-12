@@ -28,15 +28,16 @@ async function searchImages(e) {
   htmlElementVisible(loadMoreButton, false);
 
   if (isValidQuery(pixabay.query)) {
+    htmlElementVisible(loader, true);
     try {
-      htmlElementVisible(loader, true);
       const imageList = await pixabay.getImageList();
       htmlElementVisible(loader, false);
-
+      
       if (imageList.length > 0) {
         const htmlImageList = getHtmlImageList(imageList);
         renderGallery(htmlImageList, galleryList);
         gallery.refresh();
+        
         if (pixabay.totalPages > 1) {
           htmlElementVisible(loadMoreButton, true);
         }
@@ -51,11 +52,12 @@ async function searchImages(e) {
     } catch (error) {
       htmlElementVisible(loader, false);
       iziToast.error({
-        message: `Error occurred while searching for images: ${error.message}`,
+        message: 'An error occurred while fetching images. Please try again later.',
         progressBar: false,
         transitionIn: 'fadeIn',
         position: 'topRight',
       });
+      console.error("Error fetching images:", error);
     }
   } else {
     iziToast.error({
@@ -76,52 +78,65 @@ async function loadMoreImages(e) {
   try {
     const imageList = await pixabay.getImageList();
     htmlElementVisible(loader, false);
+    
+    if (imageList.length > 0) {
+      const htmlImageList = getHtmlImageList(imageList);
+      renderGallery(htmlImageList, galleryList);
+      gallery.refresh();
 
-    const htmlImageList = getHtmlImageList(imageList);
-    renderGallery(htmlImageList, galleryList);
-    gallery.refresh();
+      const listItemHeight = document.querySelector('.gallery-item');
+      if (listItemHeight) {
+        window.scrollBy({
+          top: listItemHeight.getBoundingClientRect().height * 2,
+          behavior: 'smooth',
+        });
+      }
 
-    const listItemHeight = document.querySelector('.gallery-item');
-    window.scrollBy({
-      top: listItemHeight.getBoundingClientRect().height * 2,
-      behavior: 'smooth',
-    });
-
-    if (pixabay.totalPages === pixabay.currentPage) {
-      htmlElementVisible(loadMoreButton, false);
+      if (pixabay.totalPages === pixabay.currentPage) {
+        htmlElementVisible(loadMoreButton, false);
+        iziToast.info({
+          message: `We're sorry, but you've reached the end of search results.`,
+          progressBar: false,
+          transitionIn: 'fadeIn',
+          position: 'topRight',
+        });
+      } else {
+        htmlElementVisible(loadMoreButton, true);
+      }
+    } else {
       iziToast.info({
-        message: `We're sorry, but you've reached the end of search results.`,
+        message: 'No more images found',
         progressBar: false,
         transitionIn: 'fadeIn',
         position: 'topRight',
       });
-    } else {
-      htmlElementVisible(loadMoreButton, true);
     }
   } catch (error) {
     htmlElementVisible(loader, false);
     iziToast.error({
-      message: `Error occurred while loading more images: ${error.message}`,
+      message: 'An error occurred while loading more images. Please try again later.',
       progressBar: false,
       transitionIn: 'fadeIn',
       position: 'topRight',
     });
+    console.error("Error loading more images:", error);
   }
 }
 
+
 function isValidQuery(queryToSearch) {
-  return queryToSearch.trim() !== '';
+  if (queryToSearch.trim() === '') {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function htmlElementVisible(element, isVisible = false) {
-  if (element) {
-    if (isVisible) {
-      element.classList.remove('hidden');
-    } else {
-      element.classList.add('hidden');
-    }
+  if (isVisible) {
+    element.classList.remove('hidden');
   } else {
-    console.error('Element not found:', element);
+    element.classList.add('hidden');
   }
 }
 
