@@ -109,5 +109,21 @@ async function loadMoreImages(e) {
   }
 }
 
+function isValidQuery(queryToSearch) {
+  return queryToSearch.trim() !== '';
+}
+
+function htmlElementVisible(element, isVisible = false) {
+  if (element) {
+    if (isVisible) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
+    }
+  } else {
+    console.error('Element not found:', element);
+  }
+}
+
 submitQuery.addEventListener('submit', searchImages);
 loadMoreButton.addEventListener('click', loadMoreImages);
